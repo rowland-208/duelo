@@ -38,7 +38,7 @@
 </head>
 <body>
   <h1>Duelo</h1>
-  <h2>To-do list with elo ranking</h2>
+  <h2>ADHD friendly to-do list</h2>
   <input id="input" type="text" placeholder="Enter a new item...">
   <button id="add-btn">Add Item</button>
   <button id="clear-btn">Clear List</button>
@@ -83,7 +83,7 @@ class ToDoList {
       elo: item.elo,
       trials: item.trials
     })));
-    document.cookie = "todoList=" + encodeURIComponent(itemsData) + "; max-age=86400; path=/";
+    document.cookie = "todoList=" + encodeURIComponent(itemsData) + "; max-age=2592000; path=/";
   }
 
   loadState() {
