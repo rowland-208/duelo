@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>To-Do List App</title>
+  <title>To-Do List App with Elo Scoring</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,38 +18,129 @@
     #list li:last-child {
       border-bottom: none;
     }
+    #comparison {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    #comparison button {
+      width: 45%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+    #comparison button:hover {
+      background-color: #e0e0e0;
+    }
   </style>
 </head>
 <body>
-  <h1>To-Do List App</h1>
+  <h1>To-Do List App with Elo Scoring</h1>
   <input id="input" type="text" placeholder="Enter a new item...">
   <button id="add-btn">Add Item</button>
+  <button id="clear-btn">Clear List</button>
   <ul id="list"></ul>
+  <div id="comparison">
+    <button id="item1-btn"></button>
+    <button id="item2-btn"></button>
+  </div>
+<script>
+// Model
+class Item {
+  constructor(text, elo) {
+    this.text = text;
+    this.elo = elo;
+  }
 
-  <script>
-    const input = document.getElementById('input');
-    const addBtn = document.getElementById('add-btn');
-    const list = document.getElementById('list');
+  updateElo(score) {
+    const kFactor = 32;
+    const expectedScore = 1 / (1 + Math.pow(10, (1200 - this.elo) / 400));
+    this.elo += kFactor * (score - expectedScore);
+  }
+}
 
-    let items = [];
+class ToDoList {
+  constructor() {
+    this.items = [];
+  }
 
-    addBtn.addEventListener('click', () => {
-      const newItem = input.value.trim();
-      if (newItem) {
-        items.push(newItem);
-        input.value = '';
-        renderList();
-      }
+  addItem(text) {
+    this.items.push(new Item(text, 1200));
+  }
+
+  renderList() {
+    const listElement = document.getElementById('list');
+    listElement.innerHTML = '';
+    this.items.sort((a, b) => b.elo - a.elo);
+    this.items.forEach((item) => {
+      const listItem = document.createElement('li');
+      listItem.textContent = `${item.text} (Elo: ${item.elo})`;
+      listElement.appendChild(listItem);
     });
+  }
 
-    function renderList() {
-      list.innerHTML = '';
-      items.forEach((item, index) => {
-        const listItem = document.createElement('li');
-        listItem.textContent = item;
-        list.appendChild(listItem);
-      });
+  updateComparison() {
+    if (this.items.length < 2) return;
+    const comparisonIndex1 = Math.floor(Math.random() * this.items.length);
+    let comparisonIndex2 = Math.floor(Math.random() * (this.items.length - comparisonIndex1)) + comparisonIndex1;
+    if (comparisonIndex1 === comparisonIndex2) {
+      comparisonIndex2 = comparisonIndex1 > 0 ? comparisonIndex1 - 1 : comparisonIndex1 + 1; // Handle edge case
     }
-  </script>
+    const item1 = this.items[comparisonIndex1];
+    const item2 = this.items[comparisonIndex2];
+    document.getElementById('item1-btn').textContent = item1.text;
+    document.getElementById('item2-btn').textContent = item2.text;
+    document.getElementById('item1-btn').onclick = () => {
+      item1.updateElo(1);
+      item2.updateElo(0);
+      this.renderList();
+      this.updateComparison();
+    };
+    document.getElementById('item2-btn').onclick = () => {
+      item2.updateElo(1);
+      item1.updateElo(0);
+      this.renderList();
+      this.updateComparison();
+    };
+  }
+
+  clearList() {
+    this.items = [];
+    this.renderList();
+    this.updateComparison();
+  }
+}
+
+// View
+const input = document.getElementById('input');
+const addBtn = document.getElementById('add-btn');
+const clearBtn = document.getElementById('clear-btn');
+const list = document.getElementById('list');
+const comparison = document.getElementById('comparison');
+const item1Btn = document.getElementById('item1-btn');
+const item2Btn = document.getElementById('item2-btn');
+
+// Controller
+const toDoList = new ToDoList();
+
+addBtn.addEventListener('click', () => {
+  const newItem = input.value.trim();
+  if (newItem) {
+    toDoList.addItem(newItem);
+    input.value = '';
+    toDoList.renderList();
+    toDoList.updateComparison();
+  }
+});
+
+clearBtn.addEventListener('click', () => {
+  toDoList.clearList();
+});
+
+toDoList.renderList();
+toDoList.updateComparison();
+</script>
 </body>
 </html>
