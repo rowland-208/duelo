@@ -101,15 +101,15 @@ class ToDoList {
   }
 
   renderList() {
-    const listElement = document.getElementById('list');
-    listElement.innerHTML = '';
-    this.items.sort((a, b) => b.elo - a.elo);
-    this.items.forEach((item) => {
-      const listItem = document.createElement('li');
-      listItem.textContent = `${item.text} (Elo: ${item.elo}) - Trials: ${item.trials}`;
-      listElement.appendChild(listItem);
-    });
-  }
+  const listElement = document.getElementById('list');
+  listElement.innerHTML = '';
+  this.items.sort((a, b) => b.elo - a.elo);
+  this.items.forEach((item) => {
+    const listItem = document.createElement('li');
+    listItem.textContent = `${item.text} (Elo: ${Math.round(item.elo)}) - Trials: ${item.trials}`;
+    listElement.appendChild(listItem);
+  });
+}
 
   updateComparison() {
     if (this.items.length < 2) return;
