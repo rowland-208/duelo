@@ -46,19 +46,22 @@
     <button id="item1-btn"></button>
     <button id="item2-btn"></button>
   </div>
-
-  <script>
-// Model
+<script>
 class Item {
   constructor(text, elo) {
     this.text = text;
     this.elo = elo;
+    this.trials = 0; // Counter for the number of times this item has been compared
   }
 
   updateElo(score) {
     const kFactor = 32;
     const expectedScore = 1 / (1 + Math.pow(10, (1200 - this.elo) / 400));
     this.elo += kFactor * (score - expectedScore);
+  }
+
+  incrementTrials() {
+    this.trials++;
   }
 }
 
@@ -74,7 +77,11 @@ class ToDoList {
   }
 
   saveState() {
-    const itemsData = JSON.stringify(this.items);
+    const itemsData = JSON.stringify(this.items.map(item => ({
+      text: item.text,
+      elo: item.elo,
+      trials: item.trials
+    })));
     document.cookie = "todoList=" + encodeURIComponent(itemsData) + "; max-age=86400; path=/";
   }
 
@@ -84,7 +91,11 @@ class ToDoList {
       ?.split('=')[1];
     if (cookieValue) {
       const itemsData = JSON.parse(decodeURIComponent(cookieValue));
-      this.items = itemsData.map(item => new Item(item.text, item.elo));
+      this.items = itemsData.map(item => {
+        const newItem = new Item(item.text, item.elo);
+        newItem.trials = item.trials;
+        return newItem;
+      });
     }
   }
 
@@ -94,35 +105,46 @@ class ToDoList {
     this.items.sort((a, b) => b.elo - a.elo);
     this.items.forEach((item) => {
       const listItem = document.createElement('li');
-      listItem.textContent = `${item.text} (Elo: ${item.elo})`;
+      listItem.textContent = `${item.text} (Elo: ${item.elo}) - Trials: ${item.trials}`;
       listElement.appendChild(listItem);
     });
   }
 
   updateComparison() {
     if (this.items.length < 2) return;
-    const comparisonIndex1 = Math.floor(Math.random() * this.items.length);
-    let comparisonIndex2 = Math.floor(Math.random() * (this.items.length - comparisonIndex1)) + comparisonIndex1;
-    if (comparisonIndex1 === comparisonIndex2) {
-      comparisonIndex2 = comparisonIndex1 > 0 ? comparisonIndex1 - 1 : comparisonIndex1 + 1; // Handle edge case
-    }
-    const item1 = this.items[comparisonIndex1];
-    const item2 = this.items[comparisonIndex2];
+
+    // Find the item with the minimum number of trials
+    let minTrialsItemIndex = this.items.reduce((minIndex, item, index, items) => 
+      item.trials < items[minIndex].trials ? index : minIndex, 0);
+
+    const item1 = this.items[minTrialsItemIndex];
+
+    // Remove the selected item temporarily to avoid choosing it again
+    let remainingItems = this.items.filter((_, index) => index !== minTrialsItemIndex);
+
+    // Choose a random item from the remaining items
+    const comparisonIndex2 = Math.floor(Math.random() * remainingItems.length);
+    const item2 = remainingItems[comparisonIndex2];
+
     document.getElementById('item1-btn').textContent = item1.text;
     document.getElementById('item2-btn').textContent = item2.text;
     document.getElementById('item1-btn').onclick = () => {
+      item1.incrementTrials(); // Increment here when voted
+      item2.incrementTrials(); // Increment here when voted
       item1.updateElo(1);
       item2.updateElo(0);
       this.renderList();
       this.updateComparison();
-      this.saveState(); // Save state after voting
+      this.saveState();
     };
     document.getElementById('item2-btn').onclick = () => {
+      item1.incrementTrials(); // Increment here when voted
+      item2.incrementTrials(); // Increment here when voted
       item2.updateElo(1);
       item1.updateElo(0);
       this.renderList();
       this.updateComparison();
-      this.saveState(); // Save state after voting
+      this.saveState();
     };
   }
 
@@ -144,18 +166,18 @@ addBtn.addEventListener('click', () => {
   const newItem = input.value.trim();
   if (newItem) {
     toDoList.addItem(newItem);
-    input.value = '';
-    toDoList.renderList();
-    toDoList.updateComparison();
+    input.value = ''; // Clear the input field
+    toDoList.renderList(); // Update the list display
+    toDoList.updateComparison(); // Update the comparison options
   }
 });
 
 clearBtn.addEventListener('click', () => {
-  toDoList.clearList();
+  toDoList.clearList(); // Clear all items from the list
 });
 
-toDoList.renderList(); // Initial render to display any items loaded from cookies
-toDoList.updateComparison(); // Setup initial comparison if there are enough items
+toDoList.renderList(); // Initial display of the list
+toDoList.updateComparison(); // Setup the initial comparison if there are enough items
 </script>
 </body>
 </html>
