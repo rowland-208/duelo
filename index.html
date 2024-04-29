@@ -46,7 +46,8 @@
     <button id="item1-btn"></button>
     <button id="item2-btn"></button>
   </div>
-<script>
+
+  <script>
 // Model
 class Item {
   constructor(text, elo) {
@@ -64,10 +65,27 @@ class Item {
 class ToDoList {
   constructor() {
     this.items = [];
+    this.loadState(); // Load items from cookies on startup
   }
 
-  addItem(text) {
-    this.items.push(new Item(text, 1200));
+  addItem(text, elo = 1200) {
+    this.items.push(new Item(text, elo));
+    this.saveState();
+  }
+
+  saveState() {
+    const itemsData = JSON.stringify(this.items);
+    document.cookie = "todoList=" + encodeURIComponent(itemsData) + "; max-age=86400; path=/";
+  }
+
+  loadState() {
+    const cookieValue = document.cookie.split('; ')
+      .find(row => row.startsWith('todoList='))
+      ?.split('=')[1];
+    if (cookieValue) {
+      const itemsData = JSON.parse(decodeURIComponent(cookieValue));
+      this.items = itemsData.map(item => new Item(item.text, item.elo));
+    }
   }
 
   renderList() {
@@ -97,12 +115,14 @@ class ToDoList {
       item2.updateElo(0);
       this.renderList();
       this.updateComparison();
+      this.saveState(); // Save state after voting
     };
     document.getElementById('item2-btn').onclick = () => {
       item2.updateElo(1);
       item1.updateElo(0);
       this.renderList();
       this.updateComparison();
+      this.saveState(); // Save state after voting
     };
   }
 
@@ -110,20 +130,15 @@ class ToDoList {
     this.items = [];
     this.renderList();
     this.updateComparison();
+    this.saveState();
   }
 }
 
-// View
+// View and Controller
+const toDoList = new ToDoList();
 const input = document.getElementById('input');
 const addBtn = document.getElementById('add-btn');
 const clearBtn = document.getElementById('clear-btn');
-const list = document.getElementById('list');
-const comparison = document.getElementById('comparison');
-const item1Btn = document.getElementById('item1-btn');
-const item2Btn = document.getElementById('item2-btn');
-
-// Controller
-const toDoList = new ToDoList();
 
 addBtn.addEventListener('click', () => {
   const newItem = input.value.trim();
@@ -139,8 +154,8 @@ clearBtn.addEventListener('click', () => {
   toDoList.clearList();
 });
 
-toDoList.renderList();
-toDoList.updateComparison();
+toDoList.renderList(); // Initial render to display any items loaded from cookies
+toDoList.updateComparison(); // Setup initial comparison if there are enough items
 </script>
 </body>
 </html>
