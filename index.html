@@ -1,1 +1,55 @@
-hello world
+<!DOCTYPE html>
+<html>
+<head>
+  <title>To-Do List App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #list li {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+    #list li:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>To-Do List App</h1>
+  <input id="input" type="text" placeholder="Enter a new item...">
+  <button id="add-btn">Add Item</button>
+  <ul id="list"></ul>
+
+  <script>
+    const input = document.getElementById('input');
+    const addBtn = document.getElementById('add-btn');
+    const list = document.getElementById('list');
+
+    let items = [];
+
+    addBtn.addEventListener('click', () => {
+      const newItem = input.value.trim();
+      if (newItem) {
+        items.push(newItem);
+        input.value = '';
+        renderList();
+      }
+    });
+
+    function renderList() {
+      list.innerHTML = '';
+      items.forEach((item, index) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = item;
+        list.appendChild(listItem);
+      });
+    }
+  </script>
+</body>
+</html>
