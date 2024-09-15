@@ -3,7 +3,44 @@
 <head>
   <title>Duelo</title>
   <style>
-    /* ... (same CSS as before) ... */
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #list li {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #list li:last-child {
+      border-bottom: none;
+    }
+    #comparison {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    #comparison button, .delete-btn {
+      width: 45%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+    #comparison button:hover, .delete-btn:hover {
+      background-color: #e0e0e0;
+    }
+    .delete-btn {
+      width: auto;
+      background-color: #ff4d4d;
+    }
   </style>
 </head>
 <body>
