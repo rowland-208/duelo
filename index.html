@@ -115,44 +115,67 @@ class ToDoList {
   }
 
   renderList() {
-  const listElement = document.getElementById('list');
-  listElement.innerHTML = '';
-  this.items.sort((a, b) => b.elo - a.elo);
-  this.items.forEach((item, index) => {
-    const listItem = document.createElement('li');
-    const textNode = document.createTextNode(`${item.text} (Elo: ${Math.round(item.elo)}) - Trials: ${item.trials}`);
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.addEventListener('click', () => this.removeItem(index));
-    listItem.appendChild(textNode);
-    listItem.appendChild(deleteBtn);
-    listElement.appendChild(listItem);
-  });
-}
+    const listElement = document.getElementById('list');
+    listElement.innerHTML = '';
+    this.items.sort((a, b) => b.elo - a.elo);
+    this.items.forEach((item, index) => {
+      const listItem = document.createElement('li');
+      const textNode = document.createTextNode(`${item.text} (Elo: ${Math.round(item.elo)}) - Trials: ${item.trials}`);
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.addEventListener('click', () => this.removeItem(index));
+      listItem.appendChild(textNode);
+      listItem.appendChild(deleteBtn);
+      listElement.appendChild(listItem);
+    });
+  }
 
   updateComparison() {
     if (this.items.length < 2) return;
 
     // Find the item with the minimum number of trials
     let minTrialsItemIndex = this.items.reduce(
-(minIndex, item, index, items) => 
-      item.trials < items[minIndex].trials ? index : minIndex, 0);
+      (minIndex, item, index, items) => 
+        item.trials < items[minIndex].trials ? index : minIndex, 0
+    );
 
     const item1 = this.items[minTrialsItemIndex];
 
     // Remove the selected item temporarily to avoid choosing it again
     let remainingItems = this.items.filter((_, index) => index !== minTrialsItemIndex);
 
-    // Choose a random item from the remaining items
-    const comparisonIndex2 = Math.floor(Math.random() * remainingItems.length);
-    const item2 = remainingItems[comparisonIndex2];
+    // Calculate weights for remaining items based on Elo difference
+    let weights = remainingItems.map(item => {
+      let eloDifference = Math.abs(item1.elo - item.elo);
+      let weight = 1 / (1 + eloDifference);
+      return weight;
+    });
+
+    // Compute the total weight
+    let totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+
+    // Generate a random number between 0 and totalWeight
+    let randomNum = Math.random() * totalWeight;
+
+    // Select item2 based on weights
+    let cumulativeWeight = 0;
+    let selectedIndex = 0;
+    for (let i = 0; i < remainingItems.length; i++) {
+      cumulativeWeight += weights[i];
+      if (randomNum <= cumulativeWeight) {
+        selectedIndex = i;
+        break;
+      }
+    }
+
+    const item2 = remainingItems[selectedIndex];
 
     document.getElementById('item1-btn').textContent = item1.text;
     document.getElementById('item2-btn').textContent = item2.text;
     document.getElementById('item1-btn').onclick = () => {
-      item1.incrementTrials(); // Increment here when voted
-      item2.incrementTrials(); // Increment here when voted
+      item1.incrementTrials();
+      item2.incrementTrials();
       item1.updateElo(1);
       item2.updateElo(0);
       this.renderList();
@@ -160,8 +183,8 @@ class ToDoList {
       this.saveState();
     };
     document.getElementById('item2-btn').onclick = () => {
-      item1.incrementTrials(); // Increment here when voted
-      item2.incrementTrials(); // Increment here when voted
+      item1.incrementTrials();
+      item2.incrementTrials();
       item2.updateElo(1);
       item1.updateElo(0);
       this.renderList();
@@ -188,18 +211,18 @@ addBtn.addEventListener('click', () => {
   const newItem = input.value.trim();
   if (newItem) {
     toDoList.addItem(newItem);
-    input.value = ''; // Clear the input field
-    toDoList.renderList(); // Update the list display
-    toDoList.updateComparison(); // Update the comparison options
+    input.value = '';
+    toDoList.renderList();
+    toDoList.updateComparison();
   }
 });
 
 clearBtn.addEventListener('click', () => {
-  toDoList.clearList(); // Clear all items from the list
+  toDoList.clearList();
 });
 
-toDoList.renderList(); // Initial display of the list
-toDoList.updateComparison(); // Setup the initial comparison if there are enough items
+toDoList.renderList();
+toDoList.updateComparison();
 </script>
 </body>
 </html>
